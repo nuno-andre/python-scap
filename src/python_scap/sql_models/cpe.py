@@ -9,7 +9,7 @@ from python_scap._core._types import AnyUrl
 from python_scap.schemas.cpe import CpeName
 
 
-class Deprecation(BaseSqlModel, table=True):
+class SqlCpeDeprecation(BaseSqlModel, table=True):
     deprecated_by_id: UUID = Field(primary_key=True, foreign_key='cpe_item.id')
     deprecates_id:    UUID = Field(primary_key=True, foreign_key='cpe_item.id')
 
@@ -38,9 +38,9 @@ class SqlCpeItem(BaseSqlModel, table=True):
 
 SqlCpeItem.deprecated_by = relationship(
     'SqlCpeItem',
-    secondary=Deprecation.__table__,
-    primaryjoin=SqlCpeItem.id == Deprecation.deprecates_id,
-    secondaryjoin=SqlCpeItem.id == Deprecation.deprecated_by_id,
+    secondary=SqlCpeDeprecation.__table__,
+    primaryjoin=SqlCpeItem.id == SqlCpeDeprecation.deprecates_id,
+    secondaryjoin=SqlCpeItem.id == SqlCpeDeprecation.deprecated_by_id,
     lazy='selectin',
     back_populates='deprecates',
 )
@@ -48,9 +48,9 @@ SqlCpeItem.deprecated_by = relationship(
 
 SqlCpeItem.deprecates = relationship(
     'SqlCpeItem',
-    secondary=Deprecation.__table__,
-    primaryjoin=SqlCpeItem.id == Deprecation.deprecated_by_id,
-    secondaryjoin=SqlCpeItem.id == Deprecation.deprecates_id,
+    secondary=SqlCpeDeprecation.__table__,
+    primaryjoin=SqlCpeItem.id == SqlCpeDeprecation.deprecated_by_id,
+    secondaryjoin=SqlCpeItem.id == SqlCpeDeprecation.deprecates_id,
     lazy='selectin',
     back_populates='deprecated_by',
 )
