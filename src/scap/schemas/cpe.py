@@ -3,11 +3,7 @@ from datetime import datetime
 from uuid import UUID
 import re
 
-from annotated_types import MinLen
-
-from scap._core.schema import (
-    BaseSchema, CamelBaseSchema, Field, model_validator,
-)
+from scap._core.schema import BaseSchema, CamelBaseSchema, model_validator
 from scap._core._types import StrEnum, AnyUrl, RegexString
 
 
@@ -16,7 +12,7 @@ _RE_ESC     = r'(?:\\[\\\*\?!"#\$%&\'\(\)\+,/:;<=>@\[\]\^`\{\|}~])'
 _RE_ATOM    = rf'(?:\?*|\*?)(?:{_RE_ALNUM}|{_RE_ESC})+(?:\?*|\*?)'
 _RE_COMPLEX = rf'(?:{_RE_ATOM}|[\*\-])'
 
-# for `langugage` prop, but some CPEs don't follow RFC 5646  ¯\_(ツ)_/¯
+# for `langugage` prop, but some CPEs don't follow RFC 5646
 # _RE_LANG = r'(?:[A-Za-z]{2,3}(?:-[A-Za-z]{2}|-[0-9]{3})?|[\*\-])'
 
 
@@ -66,15 +62,16 @@ class BaseCpe(CamelBaseSchema):
         name: CPE Name string.
         id:   UUID of the CPE Name.
     '''
-    id:   UUID    = Field(alias='cpeNameId')
-    name: CpeName = Field(alias='cpeName')
+    id:   UUID
+    name: CpeName
 
-
-# class CpeTitle(BaseSchema):
-#     '''Title of the CPE item.
-#     '''
-#     title: str
-#     lang:  str
+    @model_validator(mode='before')
+    @classmethod
+    def from_nvd(cls, data):
+        if isinstance(data, dict):
+            data.setdefault('name', data.pop('cpeName', None))
+            data.setdefault('id', data.pop('cpeNameId', None))
+        return data
 
 
 class CpeItem(BaseCpe):
@@ -87,21 +84,14 @@ class CpeItem(BaseCpe):
     deprecated:    bool
     created:       datetime
     last_modified: datetime
-    # titles:        Annotated[list[CpeTitle], MinLen(1)]
     title:         str
     refs:          list[CpeReference] | None = None
     deprecated_by: list[BaseCpe] | None = None
     deprecates:    list[BaseCpe] | None = None
 
-    # @computed_field
-    # @property
-    # def title(self) -> str:
-    #     return [t.title for t in self.titles if t.lang == 'en'][0]
-
     @model_validator(mode='before')
     @classmethod
     def get_title(cls, data):
-        print('DATA', data)
         if isinstance(data, dict):
             if 'titles' in data:
                 data['title'] = [t.title for t in data.pop['titles'] if t.lang == 'en'][0]

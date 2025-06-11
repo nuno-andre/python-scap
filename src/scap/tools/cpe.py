@@ -11,6 +11,7 @@ from scap.sql_models.cpe import SqlCpeItem, SqlCpeDeprecation
 
 if TYPE_CHECKING:
     from sqlalchemy.engine.base import Engine
+    from scap._core.http import ResponseItem
 
 
 log = logging.getLogger(__name__)
@@ -24,14 +25,14 @@ class NvdCpeClient(NvdClient):
     '''
 
     @cached_property
-    def chunks(self) -> str:
+    def chunks(self) -> list[ResponseItem]:
         URL = '/json/cpe/2.0/nvdcpe-2.0.zip'
         return self.get(URL)
 
     def get_cpe_items(self) -> Iterator[CpeItem]:
 
         for chunk in self.chunks:
-            log.info(f'Processing chunk: {chunk["filename"]}')
+            log.info('Processing chunk: %s', chunk['filename'])
 
             data = json.loads(chunk['content'])
 
@@ -40,15 +41,15 @@ class NvdCpeClient(NvdClient):
                 # dedup refs
                 if (refs := product['cpe'].pop('refs', None)):
                     _refs = set((ref['ref'], ref.get('type')) for ref in refs)
-                    _refs = [dict(zip(('ref', 'type'), x)) for x in _refs]
-                    product['cpe']['refs'] = _refs
+                    refs = [dict(zip(('ref', 'type'), x)) for x in _refs]
+                    product['cpe']['refs'] = refs
 
                 # dedup deprecations
                 for key in ('deprecatedBy', 'deprecatedById'):
                     if (deprs := product['cpe'].get(key)):
                         _deprs = set((d['cpeName'], d['cpeNameId']) for d in deprs)
-                        _deprs = [dict(zip(('cpeName', 'cpeNameId'), x)) for x in _deprs]
-                        product['cpe'][key] = _deprs
+                        deprs = [dict(zip(('cpeName', 'cpeNameId'), x)) for x in _deprs]
+                        product['cpe'][key] = deprs
 
                 yield CpeItem.model_validate(product['cpe'])
 

@@ -35,7 +35,7 @@ classifiers = [
     'Typing :: Typed'
 ]
 dependencies = [
-    # 'fastapi>=0.115.12',
+    'fastapi>=0.115.12',
     'httpx>=0.28.1',
     'pydantic>=2.11.5',
     'sqlmodel>=0.0.24',
@@ -122,5 +122,11 @@ combine-as-imports = true
 max-complexity = 15
 
 [tool.ruff.per-file-ignores]
-'./sdk/socglue/sql/__init__.py' = [ 'E402' ]
-'*/__init__.py' = [ 'F401' ]
+'./src/scap/_core/sql_patch.py' = [ 'C901', 'Q000' ]
+
+
+# --- MYPY ---
+# ^ https://mypy.readthedocs.io/en/stable/config_file.html
+
+[tool.mypy]
+ignore_missing_imports = true

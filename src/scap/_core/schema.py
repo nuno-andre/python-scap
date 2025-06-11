@@ -1,17 +1,11 @@
-from typing import TYPE_CHECKING
 import warnings
 
 from pydantic import (
     BaseModel, Field, ConfigDict,
     field_validator, model_validator, computed_field,
 )
-from pydantic.alias_generators import to_camel
+from pydantic.alias_generators import to_snake
 from pydantic.json_schema import PydanticJsonSchemaWarning
-
-if TYPE_CHECKING:
-    from pydantic_core import CoreSchema
-    from pydantic.annotated_handlers import GetJsonSchemaHandler
-    from pydantic.json_schema import JsonSchemaValue
 
 
 __all__ = [
@@ -27,7 +21,6 @@ __all__ = [
 class BaseSchema(BaseModel):
 
     model_config = ConfigDict(
-        validate_by_name        = True,
         use_enum_values         = True,
         extra                   = 'ignore',
     )
@@ -41,28 +34,13 @@ class CamelBaseSchema(BaseSchema):
     '''Base schema for models that use camelCase for field names.
     '''
 
-    model_config = ConfigDict(
-        alias_generator = to_camel,
-    )
-
+    # XXX: FastAPI ignores `by_field` values
+    @model_validator(mode='before')
     @classmethod
-    def __get_pydantic_json_schema__(
-        cls,
-        core_schema: 'CoreSchema',
-        handler:     'GetJsonSchemaHandler',
-    ) -> 'JsonSchemaValue':
-        # XXX: FastAPI hard encodes `by_alias=True` for docs
-        # ^ https://github.com/fastapi/fastapi/discussions/9150
-
-        def alias_to_field(schema):
-            if 'schema' in schema:
-                alias_to_field(schema['schema'])
-            elif 'fields' in schema:
-                for field in schema['fields']:
-                    schema['fields'][field]['serialization_alias'] = field
-
-        alias_to_field(core_schema)
-        return handler(core_schema)
+    def from_camel(cls, data):
+        if isinstance(data, dict):
+            data = {to_snake(k): v for k, v in data.items()}
+        return data
 
 
 warnings.filterwarnings(

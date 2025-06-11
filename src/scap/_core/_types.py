@@ -52,8 +52,10 @@ class RegexString(str, metaclass=RegexStringMeta):
 
         return super().__new__(cls, value)
 
-    def __contains__(self, item: str) -> bool:
-        return any(item == getattr(self, slot) for slot in self.__slots__)
+    def __contains__(self, item: object) -> bool:
+        if isinstance(item, str):
+            return any(item == getattr(self, slot) for slot in self.__slots__)
+        return False
 
     def __repr__(self) -> str:
         attrs = ', '.join(f'{slot}={getattr(self, slot)!r}' for slot in self.__slots__)
