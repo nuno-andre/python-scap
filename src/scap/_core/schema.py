@@ -53,8 +53,15 @@ class CamelBaseSchema(BaseSchema):
     ) -> 'JsonSchemaValue':
         # XXX: FastAPI hard encodes `by_alias=True` for docs
         # ^ https://github.com/fastapi/fastapi/discussions/9150
-        for field in core_schema['schema']['fields']:
-            core_schema['schema']['fields'][field]['serialization_alias'] = field
+
+        def alias_to_field(schema):
+            if 'schema' in schema:
+                alias_to_field(schema['schema'])
+            elif 'fields' in schema:
+                for field in schema['fields']:
+                    schema['fields'][field]['serialization_alias'] = field
+
+        alias_to_field(core_schema)
         return handler(core_schema)
 
 

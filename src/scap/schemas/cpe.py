@@ -6,7 +6,7 @@ import re
 from annotated_types import MinLen
 
 from scap._core.schema import (
-    BaseSchema, CamelBaseSchema, Field, computed_field,
+    BaseSchema, CamelBaseSchema, Field, model_validator,
 )
 from scap._core._types import StrEnum, AnyUrl, RegexString
 
@@ -59,13 +59,6 @@ class CpeReference(BaseSchema):
     type: ReferenceType | None = None
 
 
-class CpeTitle(BaseSchema):
-    '''Title of the CPE item.
-    '''
-    title: str
-    lang:  str
-
-
 class BaseCpe(CamelBaseSchema):
     '''Base class for CPE items.
 
@@ -77,22 +70,39 @@ class BaseCpe(CamelBaseSchema):
     name: CpeName = Field(alias='cpeName')
 
 
+# class CpeTitle(BaseSchema):
+#     '''Title of the CPE item.
+#     '''
+#     title: str
+#     lang:  str
+
+
 class CpeItem(BaseCpe):
     '''The CpeItem element denotes a single CPE Name.
 
     Attributes:
-        titles: Titles of the CPE item.
+        title:      Title of the CPE item.
         deprecated: Whether the item is deprecated.
     '''
     deprecated:    bool
     created:       datetime
     last_modified: datetime
-    titles:        Annotated[list[CpeTitle], MinLen(1)]
+    # titles:        Annotated[list[CpeTitle], MinLen(1)]
+    title:         str
     refs:          list[CpeReference] | None = None
     deprecated_by: list[BaseCpe] | None = None
     deprecates:    list[BaseCpe] | None = None
 
-    @computed_field
-    @property
-    def title(self) -> str:
-        return [t.title for t in self.titles if t.lang == 'en'][0]
+    # @computed_field
+    # @property
+    # def title(self) -> str:
+    #     return [t.title for t in self.titles if t.lang == 'en'][0]
+
+    @model_validator(mode='before')
+    @classmethod
+    def get_title(cls, data):
+        print('DATA', data)
+        if isinstance(data, dict):
+            if 'titles' in data:
+                data['title'] = [t.title for t in data.pop['titles'] if t.lang == 'en'][0]
+        return data
