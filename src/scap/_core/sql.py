@@ -1,9 +1,9 @@
-from python_scap._core.sql_patch import patch_sqlmodel_table_construct, patch_type_mapping
+from scap._core.sql_patch import patch_sqlmodel_table_construct, patch_type_mapping
 patch_sqlmodel_table_construct()
 patch_type_mapping()
 
 from sqlmodel import (
-    SQLModel, Field, Relationship,
+    SQLModel, Field, Relationship, select,
     ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint,
 )
 from sqlalchemy.orm import declared_attr
@@ -11,7 +11,7 @@ from pydantic.alias_generators import to_snake
 
 
 __all__ = [
-    'BaseSqlModel', 'Field', 'Relationship',
+    'BaseSqlModel', 'Field', 'Relationship', 'select',
     'ForeignKeyConstraint', 'PrimaryKeyConstraint', 'UniqueConstraint',
 ]
 

@@ -4,9 +4,9 @@ from uuid import UUID
 
 from sqlalchemy.orm import backref, relationship
 
-from python_scap._core.sql import BaseSqlModel, Field, Relationship
-from python_scap._core._types import AnyUrl
-from python_scap.schemas.cpe import CpeName
+from scap._core.sql import BaseSqlModel, Field, Relationship
+from scap._core._types import AnyUrl
+from scap.schemas.cpe import CpeName
 
 
 class SqlCpeDeprecation(BaseSqlModel, table=True):

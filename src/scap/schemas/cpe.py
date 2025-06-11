@@ -5,10 +5,10 @@ import re
 
 from annotated_types import MinLen
 
-from python_scap._core.schema import (
+from scap._core.schema import (
     BaseSchema, CamelBaseSchema, Field, computed_field,
 )
-from python_scap._core._types import StrEnum, AnyUrl, RegexString
+from scap._core._types import StrEnum, AnyUrl, RegexString
 
 
 _RE_ALNUM   = r'[A-Za-z0-9\-\._]'

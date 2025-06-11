@@ -3,8 +3,8 @@ from uuid import UUID
 
 import pytest
 
-from python_scap._core.sql import BaseSqlModel
-from python_scap.sql_models.cpe import SqlCpeItem, Deprecation
+from scap._core.sql import BaseSqlModel
+from scap.sql_models.cpe import SqlCpeItem, Deprecation
 
 from sqlmodel import Session, create_engine, select
 
@@ -23,7 +23,7 @@ def session(engine):
 
 
 def test_create_item(session, cpe_data, log):
-    from python_scap.schemas.cpe import CpeItem
+    from scap.schemas.cpe import CpeItem
 
     for product in cpe_data:
         m = CpeItem.model_validate(product)

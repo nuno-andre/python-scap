@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 import warnings
 
 from pydantic import (
@@ -5,6 +6,11 @@ from pydantic import (
     field_validator, model_validator, computed_field,
 )
 from pydantic.alias_generators import to_camel
+
+if TYPE_CHECKING:
+    from pydantic_core import CoreSchema
+    from pydantic.annotated_handlers import GetJsonSchemaHandler
+    from pydantic.json_schema import JsonSchemaValue
 
 
 __all__ = [

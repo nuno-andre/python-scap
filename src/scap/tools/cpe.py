@@ -4,10 +4,10 @@ from itertools import islice
 import logging
 import json
 
-from python_scap._core.http import NvdClient
-from python_scap._core.sql import BaseSqlModel
-from python_scap.schemas.cpe import CpeItem
-from python_scap.sql_models.cpe import SqlCpeItem, SqlCpeDeprecation
+from scap._core.http import NvdClient
+from scap._core.sql import BaseSqlModel
+from scap.schemas.cpe import CpeItem
+from scap.sql_models.cpe import SqlCpeItem, SqlCpeDeprecation
 
 if TYPE_CHECKING:
     from sqlalchemy.engine.base import Engine
@@ -70,18 +70,18 @@ def populate_database(engine: 'Engine', block_size: int = 5000) -> None:
 
     with Session(engine) as session:
 
-        # log.info('Populating CPE items...')
-        # count = 0
-        # for block in chunk(client.get_cpe_items(), block_size):
-        #     count += len(block)
+        log.info('Populating CPE items...')
+        count = 0
+        for block in chunk(client.get_cpe_items(), block_size):
+            count += len(block)
 
-        #     for product in block:
-        #         item = SqlCpeItem(**product.model_dump())
-        #         validated_item = SqlCpeItem.model_validate(item)
-        #         session.add(validated_item)
+            for product in block:
+                item = SqlCpeItem(**product.model_dump())
+                validated_item = SqlCpeItem.model_validate(item)
+                session.add(validated_item)
 
-        #     session.commit()
-        #     log.info('Added %i CPE items', count)
+            session.commit()
+            log.info('Added %i CPE items', count)
 
         log.info('Populating CPE deprecations...')
         count = 0
