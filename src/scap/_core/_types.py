@@ -1,8 +1,13 @@
-from typing import Pattern
+from typing import TYPE_CHECKING, Pattern
 from enum import Enum
 
-from pydantic import AnyUrl, GetCoreSchemaHandler
+from pydantic import AnyUrl
 from pydantic_core import core_schema
+
+if TYPE_CHECKING:
+    from pydantic_core import CoreSchema
+    from pydantic.annotated_handlers import GetJsonSchemaHandler, GetCoreSchemaHandler
+    from pydantic.json_schema import JsonSchemaValue
 
 
 __all__ = ['StrEnum', 'AnyUrl', 'RegexString']
@@ -34,8 +39,9 @@ class RegexStringMeta(type):
 
 class RegexString(str, metaclass=RegexStringMeta):
 
-    __slots__ = ['__pattern__']
+    __slots__ = ['__pattern__', '__example__']
     __pattern__: Pattern[str]
+    __example__: str
 
     def __new__(cls, value: str):
         if not (match := cls.__pattern__.fullmatch(value)):
@@ -54,6 +60,21 @@ class RegexString(str, metaclass=RegexStringMeta):
         return f'{self.__class__.__name__}({attrs})'
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, _source, _handler: GetCoreSchemaHandler):
+    def __get_pydantic_core_schema__(
+        cls,
+        _source:   RegexStringMeta,
+        _handler: 'GetCoreSchemaHandler',
+    ) -> 'CoreSchema':
         pattern = ''.join(map(str.strip, cls.__pattern__.pattern.splitlines()))
         return core_schema.str_schema(pattern=pattern)
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: 'CoreSchema',
+        handler:     'GetJsonSchemaHandler',
+    ) -> 'JsonSchemaValue':
+        json_schema = handler(core_schema)
+        if hasattr(cls, '__example__'):
+            json_schema.update({'examples': [cls.__example__]})
+        return json_schema

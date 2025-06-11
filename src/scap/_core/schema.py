@@ -6,6 +6,7 @@ from pydantic import (
     field_validator, model_validator, computed_field,
 )
 from pydantic.alias_generators import to_camel
+from pydantic.json_schema import PydanticJsonSchemaWarning
 
 if TYPE_CHECKING:
     from pydantic_core import CoreSchema
@@ -26,9 +27,9 @@ __all__ = [
 class BaseSchema(BaseModel):
 
     model_config = ConfigDict(
-        validate_by_name = True,
-        use_enum_values  = True,
-        extra            = 'ignore',
+        validate_by_name        = True,
+        use_enum_values         = True,
+        extra                   = 'ignore',
     )
 
     def model_dump(self, **kwargs) -> dict:
@@ -44,9 +45,27 @@ class CamelBaseSchema(BaseSchema):
         alias_generator = to_camel,
     )
 
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: 'CoreSchema',
+        handler:     'GetJsonSchemaHandler',
+    ) -> 'JsonSchemaValue':
+        # XXX: FastAPI hard encodes `by_alias=True` for docs
+        # ^ https://github.com/fastapi/fastapi/discussions/9150
+        for field in core_schema['schema']['fields']:
+            core_schema['schema']['fields'][field]['serialization_alias'] = field
+        return handler(core_schema)
+
 
 warnings.filterwarnings(
     'ignore',
     category=UserWarning,
     message=r'Field name .* shadows an attribute in parent .*',
+)
+
+warnings.filterwarnings(
+    'ignore',
+    category=PydanticJsonSchemaWarning,
+    message=r'.* \[non-serializable-default\]',
 )

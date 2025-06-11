@@ -22,10 +22,11 @@ _RE_COMPLEX = rf'(?:{_RE_ATOM}|[\*\-])'
 
 class CpeName(RegexString):
     '''CPE Name URI.
-
-    Example: `cpe:2.3:a:vendor:product:version:update:edition:language:sw_edition:target_sw:target_hw:other`
-    '''  # noqa: E501
-
+    '''
+    __example__ = (
+        'cpe:2.3:part:vendor:product:version:update:edition:'
+        'language:sw_edition:target_sw:target_hw:other'
+    )
     __pattern__ = re.compile(rf'''
         cpe:2\.3:
         (?P<part>[aho\*\-]):
@@ -72,8 +73,8 @@ class BaseCpe(CamelBaseSchema):
         name: CPE Name string.
         id:   UUID of the CPE Name.
     '''
-    name: CpeName = Field(alias='cpeName')
     id:   UUID    = Field(alias='cpeNameId')
+    name: CpeName = Field(alias='cpeName')
 
 
 class CpeItem(BaseCpe):
