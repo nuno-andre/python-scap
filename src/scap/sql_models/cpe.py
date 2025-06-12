@@ -27,6 +27,7 @@ class SqlCpeItem(BaseSqlModel, table=True):
     part:          str
     vendor:        str
     product:       str
+    version:       str
     deprecated:    bool
     created:       datetime
     last_modified: datetime
