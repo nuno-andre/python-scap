@@ -34,13 +34,10 @@ class CamelBaseSchema(BaseSchema):
     '''Base schema for models that use camelCase for field names.
     '''
 
-    # XXX: FastAPI ignores `by_field` values
-    @model_validator(mode='before')
-    @classmethod
-    def from_camel(cls, data):
-        if isinstance(data, dict):
-            data = {to_snake(k): v for k, v in data.items()}
-        return data
+    def __init__(self, **data):
+        # XXX: FastAPI ignores `by_field` values
+        data = {to_snake(k): v for k, v in data.items()}
+        super().__init__(**data)
 
 
 warnings.filterwarnings(

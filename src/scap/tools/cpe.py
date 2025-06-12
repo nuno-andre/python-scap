@@ -25,7 +25,7 @@ class NvdCpeClient(NvdClient):
     '''
 
     @cached_property
-    def chunks(self) -> list[ResponseItem]:
+    def chunks(self) -> list['ResponseItem']:
         URL = '/json/cpe/2.0/nvdcpe-2.0.zip'
         return self.get(URL)
 

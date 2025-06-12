@@ -1,4 +1,4 @@
-from typing import Any, Annotated
+from typing import Any, Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -13,8 +13,38 @@ from sqlalchemy.orm import selectinload
 cpe_router = APIRouter(prefix='/cpe')
 
 
+Part = Literal['a', 'h', 'o']
+
+
 async def get_scap_session() -> Any:
     raise NotImplementedError('You must override this dependency in the app')
+
+
+@cpe_router.get('/vendors', response_model=dict[str, list[str]])
+async def get_unique_vendors(
+    session: Annotated[AsyncSession, Depends(get_scap_session)],
+    part:    Part | None = None,
+):
+    stmt = select(SqlCpeItem.vendor).distinct()
+    if part is not None:
+        stmt = stmt.where(SqlCpeItem.part == part)
+    result = await session.execute(stmt)
+    return {'data:': sorted(result.scalars().all())}
+
+
+@cpe_router.get('/vendors/{vendor}/products', response_model=dict[str, list[str]])
+async def get_vendor_products(
+    vendor:  str,
+    session: Annotated[AsyncSession, Depends(get_scap_session)],
+    part:    Part | None = None,
+):
+    stmt = select(SqlCpeItem.product).where(SqlCpeItem.vendor == vendor)
+    if part is not None:
+        stmt = stmt.where(SqlCpeItem.part == part)
+
+    # TODO: if empty check vendor and raise 404 if vendor doesn't exist
+    result = await session.execute(stmt.distinct())
+    return {'data:': sorted(result.scalars().all())}
 
 
 @cpe_router.get('/{id_or_name}', response_model=CpeItem)

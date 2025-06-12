@@ -65,13 +65,10 @@ class BaseCpe(CamelBaseSchema):
     id:   UUID
     name: CpeName
 
-    @model_validator(mode='before')
-    @classmethod
-    def from_nvd(cls, data):
-        if isinstance(data, dict):
-            data.setdefault('name', data.pop('cpeName', None))
-            data.setdefault('id', data.pop('cpeNameId', None))
-        return data
+    def __init__(sel, **data):
+        data.setdefault('name', data.pop('cpeName', None))
+        data.setdefault('id', data.pop('cpeNameId', None))
+        super().__init__(**data)
 
 
 class CpeItem(BaseCpe):
@@ -81,6 +78,9 @@ class CpeItem(BaseCpe):
         title:      Title of the CPE item.
         deprecated: Whether the item is deprecated.
     '''
+    part:          str
+    vendor:        str
+    product:       str
     deprecated:    bool
     created:       datetime
     last_modified: datetime
@@ -92,7 +92,9 @@ class CpeItem(BaseCpe):
     @model_validator(mode='before')
     @classmethod
     def get_title(cls, data):
+
         if isinstance(data, dict):
+            data = CpeName(data['name']).dict() | data
             if 'titles' in data:
-                data['title'] = [t.title for t in data.pop['titles'] if t.lang == 'en'][0]
+                data['title'] = [t['title'] for t in data['titles'] if t['lang'] == 'en'][0]
         return data

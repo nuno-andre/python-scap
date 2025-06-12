@@ -1,10 +1,11 @@
 from datetime import datetime
 from uuid import UUID
+from copy import copy
 
 import pytest
 
 from scap._core.sql import BaseSqlModel
-from scap.sql_models.cpe import SqlCpeItem, Deprecation
+from scap.sql_models.cpe import SqlCpeItem, SqlCpeDeprecation
 
 from sqlmodel import Session, create_engine, select
 
@@ -26,13 +27,13 @@ def test_create_item(session, cpe_data, log):
     from scap.schemas.cpe import CpeItem
 
     for product in cpe_data:
-        m = CpeItem.model_validate(product)
+        m = CpeItem.model_validate(copy(product))
         i = SqlCpeItem(**m.model_dump())
         v = SqlCpeItem.model_validate(i)
         session.add(v)
 
         for d in product.get('deprecatedBy', []):
-            m = Deprecation.model_validate({
+            m = SqlCpeDeprecation.model_validate({
                 'deprecated_by_id': d['cpeNameId'],
                 'deprecates_id': i.id,
             })

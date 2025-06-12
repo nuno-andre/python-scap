@@ -61,6 +61,9 @@ class RegexString(str, metaclass=RegexStringMeta):
         attrs = ', '.join(f'{slot}={getattr(self, slot)!r}' for slot in self.__slots__)
         return f'{self.__class__.__name__}({attrs})'
 
+    def dict(self):
+        return {slot: getattr(self, slot) for slot in self.__slots__}
+
     @classmethod
     def __get_pydantic_core_schema__(
         cls,
