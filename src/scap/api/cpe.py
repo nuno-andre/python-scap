@@ -42,7 +42,7 @@ async def get_vendor_products(
     if part is not None:
         stmt = stmt.where(SqlCpeItem.part == part)
 
-    # TODO: if empty check vendor and raise 404 if vendor doesn't exist
+    # TODO: if empty check vendor and raise 404 if doesn't exist
     result = await session.execute(stmt.distinct())
     return {'data:': sorted(result.scalars().all())}
 

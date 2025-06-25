@@ -1,9 +1,9 @@
-from typing import Annotated
-from datetime import datetime
+from typing import Annotated, Any
+from datetime import datetime, timezone
 from uuid import UUID
 import re
 
-from scap._core.schema import BaseSchema, CamelBaseSchema, model_validator
+from scap._core.schema import BaseSchema, CamelBaseSchema, model_validator, field_validator
 from scap._core._types import StrEnum, AnyUrl, RegexString
 
 
@@ -99,3 +99,10 @@ class CpeItem(BaseCpe):
             if 'titles' in data:
                 data['title'] = [t['title'] for t in data['titles'] if t['lang'] == 'en'][0]
         return data
+
+    @field_validator('created', 'last_modified', mode='before')
+    @classmethod
+    def ensure_utc(cls, v: Any) -> datetime:
+        if isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=timezone.utc)
+        return v

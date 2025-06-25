@@ -66,7 +66,6 @@ def populate_database(engine: 'Engine', block_size: int = 5000) -> None:
 
     BaseSqlModel.metadata.create_all(engine)
 
-
     client = NvdCpeClient()
 
     with Session(engine) as session:
@@ -98,4 +97,44 @@ def populate_database(engine: 'Engine', block_size: int = 5000) -> None:
                     session.add(dep)
 
             session.commit()
+            log.info('Added %i CPE deprecations', count)
+
+
+async def async_populate_database(engine, block_size: int = 5000) -> None:
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
+    client = NvdCpeClient()
+
+    async with engine.begin() as conn:
+        await conn.run_sync(BaseSqlModel.metadata.create_all)
+
+    async with AsyncSession(engine) as session:
+
+        log.info('Populating CPE items...')
+        count = 0
+        for block in chunk(client.get_cpe_items(), block_size):
+            count += len(block)
+
+            for product in block:
+                item = SqlCpeItem(**product.model_dump())
+                validated_item = SqlCpeItem.model_validate(item)
+                session.add(validated_item)
+
+            await session.commit()
+            log.info('Added %i CPE items', count)
+
+        log.info('Populating CPE deprecations...')
+        count = 0
+        for block in chunk(client.get_cpe_items(), block_size):
+            count += len(block)
+
+            for product in block:
+                for depr in product.deprecated_by or []:
+                    dep = SqlCpeDeprecation(
+                        deprecated_by_id=depr.id,
+                        deprecates_id=product.id,
+                    )
+                    session.add(dep)
+
+            await session.commit()
             log.info('Added %i CPE deprecations', count)

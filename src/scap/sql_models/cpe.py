@@ -1,11 +1,11 @@
-from typing import Annotated
-from datetime import datetime
+from typing import Annotated, Any
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.orm import backref, relationship
 
 from scap._core.sql import BaseSqlModel, Field, Relationship
-from scap._core.schema import model_validator
+from scap._core.schema import field_validator
 from scap._core._types import AnyUrl
 from scap.schemas.cpe import CpeName
 
@@ -16,9 +16,10 @@ class SqlCpeDeprecation(BaseSqlModel, table=True):
 
 
 class SqlCpeReference(BaseSqlModel, table=True):
-    ref:    Annotated[str, AnyUrl] = Field(primary_key=True)
-    type:   str | None = Field(None, primary_key=True, nullable=True)
-    cpe_id: UUID = Field(None, primary_key=True, foreign_key='cpe_item.id', nullable=True)
+    id:     int | None = Field(default=None, primary_key=True)
+    ref:    Annotated[str, AnyUrl] = Field(max_length=2048)
+    type:   str | None = Field(None, max_length=10, nullable=True)
+    cpe_id: UUID = Field(None, foreign_key='cpe_item.id', nullable=True)
 
 
 class SqlCpeItem(BaseSqlModel, table=True):
@@ -39,6 +40,13 @@ class SqlCpeItem(BaseSqlModel, table=True):
             'backref': backref('cpe_ref', lazy='selectin'),
         },
     )
+
+    @field_validator('created', 'last_modified', mode='before')
+    @classmethod
+    def ensure_utc(cls, v: Any) -> datetime:
+        if isinstance(v, datetime) and v.tzinfo is None:
+            return v.replace(tzinfo=timezone.utc)
+        return v
 
 
 SqlCpeItem.deprecated_by = relationship(
