@@ -1,6 +1,6 @@
 [project]
 name = 'python-scap'
-version = '0.0.4'
+version = '0.0.5'
 description = 'Python library for working with NVD SCAP content'
 readme = 'readme.md'
 requires-python = '>=3.10'

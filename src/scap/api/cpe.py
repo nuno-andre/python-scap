@@ -29,7 +29,7 @@ async def get_unique_vendors(
     if part is not None:
         stmt = stmt.where(SqlCpeItem.part == part)
     result = await session.execute(stmt)
-    return {'data:': sorted(result.scalars().all())}
+    return {'data': sorted(result.scalars().all())}
 
 
 @cpe_router.get('/vendors/{vendor}/products', response_model=dict[str, list[str]])
@@ -44,7 +44,7 @@ async def get_vendor_products(
 
     # TODO: if empty check vendor and raise 404 if doesn't exist
     result = await session.execute(stmt.distinct())
-    return {'data:': sorted(result.scalars().all())}
+    return {'data': sorted(result.scalars().all())}
 
 
 @cpe_router.get('/{id_or_name}', response_model=CpeItem)
