@@ -47,6 +47,25 @@ async def get_vendor_products(
     return {'data': sorted(result.scalars().all())}
 
 
+@cpe_router.get('/vendors/{vendor}/products/{product}', response_model=dict[str, list[str]])
+async def get_product_versions(
+    vendor:  str,
+    product: str,
+    session: Annotated[AsyncSession, Depends(get_scap_session)],
+    part:    Part | None = None,
+):
+    stmt = (select(SqlCpeItem.version)
+            .where(SqlCpeItem.vendor == vendor)
+            .where(SqlCpeItem.product == product))
+
+    if part is not None:
+        stmt = stmt.where(SqlCpeItem.part == part)
+
+    # TODO: if empty check product and/or vendor and raise 404 if doesn't exist
+    result = await session.execute(stmt.distinct())
+    return {'data': sorted(result.scalars().all())}
+
+
 @cpe_router.get('/{id_or_name}', response_model=CpeItem)
 async def get_cpe(
     id_or_name: str,
